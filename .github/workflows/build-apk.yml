@@ -31,8 +31,17 @@ jobs:
         working-directory: android-wrapper
         run: gradle assembleDebug
 
+      - name: Find generated APK files
+        run: |
+          echo "Searching for APK files..."
+          find . -type f -name "*.apk" -print
+          mkdir -p apk-output
+          find . -type f -name "*.apk" -exec cp {} apk-output/ \;
+          ls -la apk-output
+
       - name: Upload APK artifact
         uses: actions/upload-artifact@v4
         with:
           name: BlackoutGarden-Protocol868-debug-apk
-          path: android-wrapper/app/build/outputs/apk/debug/app-debug.apk
+          path: apk-output/*.apk
+          if-no-files-found: error
