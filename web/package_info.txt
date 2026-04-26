@@ -1,0 +1,3 @@
+Blackout Garden: Protocol 868
+Playable offline HTML5 build.
+Open index.html directly, or serve locally for PWA behaviour.
