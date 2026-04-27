@@ -1,13 +1,13 @@
 {
-  "name": "Blackout Garden: Protocol 868",
-  "short_name": "Protocol 868",
-  "description": "Offline single-player survival action game.",
-  "start_url": "./index.html",
+  "name": "Blackout Garden: Protocolo 868",
+  "short_name": "Blackout Garden",
+  "description": "Jogo offline de sobrevivência, base técnica e rede Mesh 868 MHz.",
+  "start_url": "index.html",
   "display": "fullscreen",
-  "orientation": "landscape",
+  "orientation": "portrait",
   "background_color": "#050906",
-  "theme_color": "#07110d",
+  "theme_color": "#050906",
   "icons": [
-    { "src": "icon.svg", "sizes": "512x512", "type": "image/svg+xml", "purpose": "any maskable" }
+    { "src": "icon.svg", "sizes": "512x512", "type": "image/svg+xml" }
   ]
 }
