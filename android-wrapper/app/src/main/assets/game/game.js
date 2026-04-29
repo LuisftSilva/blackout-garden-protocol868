@@ -38,9 +38,9 @@
   const angleTo = (a,b,c,d) => Math.atan2(d-b,c-a);
   const choice = arr => arr[Math.floor(Math.random()*arr.length)];
 
-  const SAVE_KEY = 'blackout_garden_protocol_868_save_pt_v2';
+  const SAVE_KEY = 'blackout_garden_protocol_868_save_pt_v4_prod_art';
   const DEFAULT = {
-    version: 6, day: 1, completed: 0, highScore: 0,
+    version: 20, day: 1, completed: 0, highScore: 0,
     resources: { energia: 75, agua: 52, pecas: 14, dados: 0, medicina: 5 },
     base: { reator: 0, filtragem: 0, estufa: 0, rede: 0, drone: 0, oficina: 0 }
   };
@@ -60,53 +60,37 @@
   };
 
   const game = {
-    t:0, zoom:0.78, cam:{x:0,y:0,tx:0,ty:0}, mission:null,
+    t:0, zoom:0.74, cam:{x:0,y:0,tx:0,ty:0}, mission:null,
     player:null, drone:null, enemies:[], bullets:[], pickups:[], obstacles:[], terminals:[], particles:[], weather:[], decals:[],
     objective:'', score:0, extraction:false
   };
 
   const art = {
-    base: loadImage('assets/art/base_bunker.webp'),
-    mission: loadImage('assets/art/mission_battlefield.webp'),
-    portrait: loadImage('assets/art/operator_portrait.webp'),
-    enemies: loadImage('assets/art/enemy_compendium.webp'),
-    bunkerSheet: loadImage('assets/art/bunker_sheet.webp')
+    base: loadImage('assets/art/base_bunker_prod.webp'),
+    battlefield: loadImage('assets/art/battlefield_prod.webp'),
+    player: loadImage('assets/art/player_prod.webp'),
+    raider: loadImage('assets/art/raider_prod.webp'),
+    drone: loadImage('assets/art/drone_prod.webp'),
+    turret: loadImage('assets/art/turret_prod.webp'),
+    hud: loadImage('assets/art/hud_pack_prod.webp')
   };
-  function loadImage(src){
-    const img = new Image();
-    img.decoding = 'async';
-    img.src = src;
-    return img;
-  }
+  function loadImage(src){ const img = new Image(); img.decoding = 'async'; img.src = src; return img; }
+  function imageReady(img){ return img && img.complete && img.naturalWidth > 0; }
   function drawCoverImage(c, img, x, y, w, h, alpha=1){
-    if(!img || !img.complete || !img.naturalWidth) return false;
-    const iw=img.naturalWidth, ih=img.naturalHeight;
-    const s=Math.max(w/iw, h/ih);
-    const sw=w/s, sh=h/s;
-    const sx=(iw-sw)/2, sy=(ih-sh)/2;
-    c.save();
-    c.globalAlpha=alpha;
-    c.drawImage(img, sx, sy, sw, sh, x, y, w, h);
-    c.restore();
-    return true;
+    if(!imageReady(img)) return false;
+    const iw=img.naturalWidth, ih=img.naturalHeight; const s=Math.max(w/iw,h/ih); const sw=w/s, sh=h/s; const sx=(iw-sw)/2, sy=(ih-sh)/2;
+    c.save(); c.globalAlpha=alpha; c.drawImage(img,sx,sy,sw,sh,x,y,w,h); c.restore(); return true;
   }
-  function drawContainImage(c, img, x, y, w, h, alpha=1){
-    if(!img || !img.complete || !img.naturalWidth) return false;
-    const iw=img.naturalWidth, ih=img.naturalHeight;
-    const s=Math.min(w/iw, h/ih);
-    const dw=iw*s, dh=ih*s;
-    c.save();
-    c.globalAlpha=alpha;
-    c.drawImage(img, x+(w-dw)/2, y+(h-dh)/2, dw, dh);
-    c.restore();
-    return true;
+  function drawSpriteImage(img, x, y, w, h, angle=0, alpha=1){
+    if(!imageReady(img)) return false;
+    ctx.save(); ctx.globalAlpha=alpha; ctx.translate(x,y); ctx.rotate(angle); ctx.drawImage(img,-w/2,-h/2,w,h); ctx.restore(); return true;
   }
 
 
   const missions = [
-    { id:'gardunha', nome:'Relé da Gardunha', regiao:'Serra da Gardunha', clima:'chuva', w:2300, h:1320, goal:3, dif:1, intro:'Reativa o relé enterrado junto ao antigo posto de vigia. Há drones avariados, ruínas industriais e zonas de cobertura.' },
+    { id:'gardunha', nome:'Relé da Gardunha', regiao:'Serra da Gardunha', clima:'chuva', w:2350, h:1320, goal:3, dif:1, intro:'Reativa o relé enterrado no complexo exterior. Há cobertura, drones e terminais espalhados pelo antigo posto industrial.' },
     { id:'estrela', nome:'Nó Congelado', regiao:'Serra da Estrela', clima:'neve', w:2500, h:1400, goal:4, dif:2, intro:'O nó ainda transmite ruído. Recupera dados, ativa terminais e levanta a antena antes da tempestade.' },
-    { id:'marao', nome:'Cume Negro', regiao:'Serra do Marão', clima:'cinza', w:2700, h:1500, goal:5, dif:3, intro:'Um comboio destruído bloqueia o caminho. O antigo jammer ainda consome energia algures no cume.' }
+    { id:'marao', nome:'Cume Negro', regiao:'Serra do Marão', clima:'cinza', w:2700, h:1500, goal:5, dif:3, intro:'Um jammer antigo consome energia no cume. Usa cobertura e limpa a zona antes da extração.' }
   ];
 
   function resize(){
@@ -145,10 +129,10 @@
     ui.innerHTML=`<div class="screen"><div class="menu-card">
       <h1>Blackout<br><span>Garden</span></h1>
       <div class="badge">Protocolo 868 · Offline · Um jogador</div>
-      <p class="subtitle">Portugal ficou às escuras. Tu controlas uma base técnica escondida na serra, reativas relés 868 MHz, recolhes recursos e manténs a rede Mesh viva. Agora com direção artística baseada no bunker premium: base ilustrada, missão com fundo de combate detalhado, operador no HUD e ambiente mais cinematográfico.</p>
+      <p class="subtitle">Portugal ficou às escuras. Tu controlas uma base técnica escondida na serra, reativas relés 868 MHz, recolhes recursos e manténs a rede Mesh viva. Versão 0.2.0 com asset pipeline de produção: bunker ilustrado, mapa tático, sprites AI, HUD industrial e combate em landscape.</p>
       <div class="actions"><button id="continueBtn">Continuar</button><button class="secondary" id="newBtn">Novo jogo</button><button class="secondary" id="baseBtn">Base</button></div>
       <div class="stats"><div class="stat"><b>${state.day}</b><span>Dia</span></div><div class="stat"><b>${state.completed}</b><span>Relés</span></div><div class="stat"><b>${state.resources.pecas}</b><span>Peças</span></div><div class="stat"><b>${state.highScore}</b><span>Recorde</span></div></div>
-      <div class="grid3"><div class="panel"><h3>Explorar</h3><p>Missões horizontais com campo de batalha mais aberto, cenário ilustrado, cobertura, nevoeiro, drones e extração.</p></div><div class="panel"><h3>Disparar melhor</h3><p>Botão de tiro com auto-mira ao inimigo mais próximo. Toca no mapa para definir alvo manual.</p></div><div class="panel"><h3>Melhorar</h3><p>Investe em reator, filtragem, estufa, rede, drone e oficina.</p></div></div>
+      <div class="grid3"><div class="panel"><h3>Explorar</h3><p>Missões em landscape com mapa tático, zoom out, cobertura, drones, terminais e extração.</p></div><div class="panel"><h3>Disparar melhor</h3><p>Botão de tiro com auto-mira ao inimigo mais próximo. Toca no mapa para definir alvo manual.</p></div><div class="panel"><h3>Melhorar</h3><p>Investe em reator, filtragem, estufa, rede, drone e oficina.</p></div></div>
     </div></div>`;
     document.getElementById('continueBtn').onclick=()=>{ensureAudio();showBase();};
     document.getElementById('baseBtn').onclick=()=>{ensureAudio();showBase();};
@@ -165,7 +149,7 @@ function showBase(){
     <p class="subtitle">Dia ${state.day}. Próxima missão: <b>${m.nome}</b>. ${m.intro}</p>
     <div class="base-visual panel"><canvas id="baseScene" class="base-scene"></canvas></div>
     <div class="stats"><div class="stat"><b>${r.energia}</b><span>Energia</span></div><div class="stat"><b>${r.agua}</b><span>Água</span></div><div class="stat"><b>${r.pecas}</b><span>Peças</span></div><div class="stat"><b>${r.dados}</b><span>Dados</span></div><div class="stat"><b>${r.medicina}</b><span>Medicina</span></div><div class="stat"><b>${b.rede}</b><span>Rede</span></div></div>
-    <div class="grid2"><div class="panel"><h3>Operações</h3><p>A base agora usa arte ilustrada do bunker como fundo principal: comando, oficina, enfermaria, estufa, energia, comunicações e armazenamento. É o quartel-general do jogo, não uma tabela desenhada à pressa.</p></div><div class="panel"><h3>Objetivo</h3><p>Ativa todos os terminais, levanta a antena 868 MHz e volta ao ponto de extração. Em missão o ecrã abre mais o campo de visão e usa cenário ilustrado para dar escala ao combate.</p></div></div>
+    <div class="grid2"><div class="panel"><h3>Estado da base</h3><p>O bunker é o teu quartel-general: comando, oficina, enfermaria, estufa, energia, comunicações e armazenamento. As zonas realçadas servem como hotspots visuais para a próxima fase.</p></div><div class="panel"><h3>Missão</h3><p>Ativa terminais, levanta a antena 868 MHz e volta à extração. O campo de batalha agora usa arte de produção e zoom out para melhor leitura tática.</p></div></div>
     <h3 style="margin:22px 0 0">Melhorias</h3><div class="upgrades">
     ${card('reator','Reator','Mais bateria de missão e tolerância a falhas.')}${card('filtragem','Filtragem','Mais água recuperada após missões.')}${card('estufa','Estufa medicinal','Gera medicina depois de cada relé.')}${card('rede','Amplificador Mesh','Aumenta alcance do scan e visibilidade dos objetivos.')}${card('drone','Drone auxiliar','Drone causa mais dano e marca inimigos.')}${card('oficina','Oficina','Reduz custos de melhorias futuras.')}
     </div><div class="actions"><button id="launch">Iniciar missão</button><button class="secondary" id="menu">Menu</button><button class="danger" id="reset">Apagar save</button></div>
@@ -176,49 +160,17 @@ function showBase(){
   document.getElementById('reset').onclick=()=>{ if(confirm('Apagar tudo?')){ localStorage.removeItem(SAVE_KEY); Object.assign(state, clone(DEFAULT)); showMenu(); }};
   setTimeout(drawBaseScene, 0);
 }
-
 function drawBaseScene(){
   const cv=document.getElementById('baseScene'); if(!cv) return;
   const c=cv.getContext('2d'); const dpr=Math.min(2, window.devicePixelRatio||1);
-  const rect=cv.getBoundingClientRect(); const w=Math.max(640, Math.floor(rect.width||980)); const h=Math.max(260, Math.floor(rect.height||360));
+  const rect=cv.getBoundingClientRect(); const w=Math.max(640, Math.floor(rect.width||1100)); const h=Math.max(280, Math.floor(rect.height||440));
   cv.width=Math.floor(w*dpr); cv.height=Math.floor(h*dpr); c.setTransform(dpr,0,0,dpr,0,0);
-  const g=c.createLinearGradient(0,0,0,h); g.addColorStop(0,'#132118'); g.addColorStop(1,'#08100c'); c.fillStyle=g; c.fillRect(0,0,w,h);
+  const bg=c.createLinearGradient(0,0,0,h); bg.addColorStop(0,'#10140f'); bg.addColorStop(1,'#050806'); c.fillStyle=bg; c.fillRect(0,0,w,h);
   drawCoverImage(c, art.base, 0, 0, w, h, 1);
-  const vg=c.createRadialGradient(w/2,h/2,Math.min(w,h)*.2,w/2,h/2,Math.max(w,h)*.72);
-  vg.addColorStop(0,'rgba(0,0,0,0)');
-  vg.addColorStop(1,'rgba(0,0,0,.42)');
-  c.fillStyle=vg; c.fillRect(0,0,w,h);
-  const rooms=[
-    ['COMANDO',.10,.17,.23,.22,'rgba(95,223,255,.22)'],
-    ['OFICINA',.42,.17,.18,.22,'rgba(255,200,91,.18)'],
-    ['ENFERMARIA',.05,.38,.18,.20,'rgba(215,255,233,.14)'],
-    ['NÚCLEO',.42,.39,.22,.20,'rgba(95,223,255,.16)'],
-    ['ESTUFA',.56,.59,.31,.19,'rgba(82,255,174,.18)'],
-    ['ENERGIA',.43,.78,.38,.15,'rgba(255,200,91,.13)']
-  ];
-  c.font='800 11px system-ui';
-  rooms.forEach(([name,x,y,rw,rh,col])=>{
-    const rx=x*w, ry=y*h, ww=rw*w, hh=rh*h;
-    c.save();
-    c.strokeStyle=col.replace('.18','.55').replace('.22','.55').replace('.16','.45').replace('.14','.4').replace('.13','.38');
-    c.fillStyle=col;
-    c.lineWidth=1.5;
-    c.beginPath(); c.roundRect(rx,ry,ww,hh,12); c.fill(); c.stroke();
-    c.shadowBlur=14; c.shadowColor=col; c.fillStyle='rgba(215,255,233,.92)';
-    c.fillText(name,rx+10,ry+18);
-    c.restore();
-  });
-  c.save();
-  c.globalAlpha=.65;
-  for(let i=0;i<9;i++){
-    const x=(.12*w)+(i*18)%(.18*w), y=.22*h + Math.sin(Date.now()/700+i)*4;
-    c.fillStyle='rgba(95,223,255,.30)'; c.fillRect(x,y,24,2);
-  }
-  c.fillStyle='rgba(82,255,174,.25)';
-  c.fillRect(.60*w,.66*h,.18*w,3);
-  c.restore();
-  c.fillStyle='rgba(215,255,233,.92)'; c.font='900 12px system-ui';
-  c.fillText('BASE OPERACIONAL · PROTOCOLO 868 · REDE MESH · SUPORTE MÉDICO · ENERGIA · ESTUFA', 18, h-16);
+  const vg=c.createRadialGradient(w/2,h/2,Math.min(w,h)*.20,w/2,h/2,Math.max(w,h)*.74); vg.addColorStop(0,'rgba(0,0,0,0)'); vg.addColorStop(1,'rgba(0,0,0,.42)'); c.fillStyle=vg; c.fillRect(0,0,w,h);
+  const rooms=[['COMANDO',.06,.22,.27,.22,'rgba(95,223,255,.20)'],['OFICINA',.61,.23,.25,.20,'rgba(255,200,91,.17)'],['ENFERMARIA',.06,.47,.25,.22,'rgba(215,255,233,.13)'],['ESTUFA',.57,.48,.31,.20,'rgba(82,255,174,.17)'],['DORMITÓRIO',.07,.72,.28,.18,'rgba(255,200,91,.11)'],['ENERGIA',.58,.73,.32,.18,'rgba(95,223,255,.12)']];
+  c.font='900 11px system-ui'; rooms.forEach(([name,x,y,rw,rh,col])=>{ const rx=x*w, ry=y*h, ww=rw*w, hh=rh*h; c.save(); c.strokeStyle=col.replace('.20','.55').replace('.17','.48').replace('.13','.38').replace('.11','.32').replace('.12','.36'); c.fillStyle=col; c.lineWidth=1.5; c.beginPath(); c.roundRect(rx,ry,ww,hh,12); c.fill(); c.stroke(); c.shadowBlur=12; c.shadowColor=col; c.fillStyle='rgba(230,255,240,.92)'; c.fillText(name,rx+10,ry+18); c.restore(); });
+  c.fillStyle='rgba(215,255,233,.92)'; c.font='900 12px system-ui'; c.fillText('BASE OPERACIONAL · PROTOCOLO 868 · REDE MESH · SUPORTE MÉDICO · ENERGIA · ESTUFA', 18, h-16);
 }
 function buy(id){ const c=custo(id), r=state.resources; if(r.pecas<c.pecas||r.dados<c.dados){ toast('Faltam recursos. Vai buscar peças e dados.'); beep(120,.1,'sawtooth'); return; } r.pecas-=c.pecas; r.dados-=c.dados; state.base[id]=(state.base[id]||0)+1; save(); beep(560,.1); showBase(); }
 
@@ -334,41 +286,34 @@ function buy(id){ const c=custo(id), r=state.resources; if(r.pecas<c.pecas||r.da
 function drawMission(){
   const sx=(Math.random()-.5)*shake, sy=(Math.random()-.5)*shake; ctx.translate(sx,sy); const cam=game.cam, m=game.mission;
   const bg=ctx.createLinearGradient(0,0,0,H); bg.addColorStop(0,m.clima==='neve'?'#071217':m.clima==='cinza'?'#11100b':'#07120d'); bg.addColorStop(.55,'#09110c'); bg.addColorStop(1,'#050906'); ctx.fillStyle=bg; ctx.fillRect(0,0,W,H);
-  ctx.save();
-  ctx.translate(W*(1-game.zoom)/2, H*(1-game.zoom)/2);
-  ctx.scale(game.zoom, game.zoom);
-  ctx.translate(-cam.x,-cam.y);
-  ctx.fillStyle=m.clima==='neve'?'#0b171a':m.clima==='cinza'?'#15130d':'#0a1510'; ctx.fillRect(0,0,m.w,m.h);
-  if(art.mission.complete && art.mission.naturalWidth){
-    const tileW=1920, tileH=1080;
-    for(let xx=0; xx<m.w; xx+=tileW){
-      for(let yy=0; yy<m.h; yy+=tileH){
-        ctx.drawImage(art.mission, xx, yy, tileW, tileH);
-      }
-    }
-    ctx.fillStyle='rgba(0,0,0,.20)'; ctx.fillRect(0,0,m.w,m.h);
-  }
+  ctx.save(); ctx.translate(W*(1-game.zoom)/2, H*(1-game.zoom)/2); ctx.scale(game.zoom, game.zoom); ctx.translate(-cam.x,-cam.y);
+  ctx.fillStyle=m.clima==='neve'?'#0b171a':m.clima==='cinza'?'#15130d':'#0a1510'; ctx.fillRect(0,0,m.w,m.h); drawCoverImage(ctx, art.battlefield, 0, 0, m.w, m.h, 1); ctx.fillStyle='rgba(0,0,0,.10)'; ctx.fillRect(0,0,m.w,m.h);
   ctx.strokeStyle='rgba(82,255,174,.035)'; for(let x=0;x<m.w;x+=120){ ctx.beginPath(); ctx.moveTo(x,0); ctx.lineTo(x,m.h); ctx.stroke(); } for(let y=0;y<m.h;y+=120){ ctx.beginPath(); ctx.moveTo(0,y); ctx.lineTo(m.w,y); ctx.stroke(); }
-  ctx.save(); ctx.translate(m.w/2,m.h-90); ctx.strokeStyle=game.extraction?C.accent:'rgba(82,255,174,.35)'; ctx.lineWidth=4; ctx.beginPath(); ctx.arc(0,0,70,0,TAU); ctx.stroke(); ctx.fillStyle=game.extraction?'rgba(82,255,174,.16)':'rgba(82,255,174,.07)'; ctx.beginPath(); ctx.arc(0,0,70,0,TAU); ctx.fill(); textCenter('EXTRAÇÃO',0,4,12,C.text); ctx.restore();
-  for(const o of game.obstacles) drawObstacle(o);
-  for(const pk of game.pickups) if(!pk.col) drawPickup(pk);
-  for(const t of game.terminals) drawTerminal(t);
-  for(const e of game.enemies) if(e.hp>0) drawEnemy(e);
-  drawDrone(); drawPlayer();
-  for(const b of game.bullets) drawBullet(b);
-  for(const pa of game.particles) drawParticle(pa);
-  ctx.restore();
-  const vg=ctx.createRadialGradient(W/2,H/2,Math.min(W,H)*.12,W/2,H/2,Math.max(W,H)*.7); vg.addColorStop(0,'rgba(0,0,0,0)'); vg.addColorStop(1,'rgba(0,0,0,.34)'); ctx.fillStyle=vg; ctx.fillRect(0,0,W,H);
-  drawWeather(); drawMinimap();
+  ctx.save(); ctx.translate(m.w/2,m.h-90); ctx.strokeStyle=game.extraction?C.accent:'rgba(82,255,174,.38)'; ctx.lineWidth=4; ctx.beginPath(); ctx.arc(0,0,72,0,TAU); ctx.stroke(); ctx.fillStyle=game.extraction?'rgba(82,255,174,.16)':'rgba(82,255,174,.07)'; ctx.beginPath(); ctx.arc(0,0,72,0,TAU); ctx.fill(); textCenter('EXTRAÇÃO',0,4,12,C.text); ctx.restore();
+  for(const o of game.obstacles) drawObstacle(o); for(const pk of game.pickups) if(!pk.col) drawPickup(pk); for(const t of game.terminals) drawTerminal(t); for(const e of game.enemies) if(e.hp>0) drawEnemy(e); drawDrone(); drawPlayer(); for(const b of game.bullets) drawBullet(b); for(const pa of game.particles) drawParticle(pa);
+  ctx.restore(); const vg=ctx.createRadialGradient(W/2,H/2,Math.min(W,H)*.12,W/2,H/2,Math.max(W,H)*.7); vg.addColorStop(0,'rgba(0,0,0,0)'); vg.addColorStop(1,'rgba(0,0,0,.34)'); ctx.fillStyle=vg; ctx.fillRect(0,0,W,H); drawWeather(); drawMinimap();
 }
 
   function textCenter(txt,x,y,size,col){ ctx.fillStyle=col; ctx.font=`900 ${size}px system-ui`; ctx.textAlign='center'; ctx.textBaseline='middle'; ctx.fillText(txt,x,y); }
-  function drawObstacle(o){ ctx.save(); ctx.translate(o.x,o.y); ctx.rotate(o.rot); const col=o.kind==='tech'?'#24362f':o.kind==='tree'?'#172b1c':'#1b2a22'; ctx.fillStyle=col; ctx.strokeStyle='rgba(118,255,190,.12)'; ctx.lineWidth=2; if(o.kind==='wall'){ ctx.roundRect(-o.w/2,-o.h/2,o.w,o.h,8); ctx.fill(); ctx.stroke(); } else { ctx.beginPath(); ctx.ellipse(0,0,o.w*.5,o.h*.42,0,0,TAU); ctx.fill(); ctx.stroke(); } if(o.kind==='tech'){ ctx.fillStyle='rgba(82,255,174,.25)'; ctx.fillRect(-o.w*.18,-o.h*.12,o.w*.36,4); } ctx.restore(); }
+  function drawObstacle(o){ ctx.save(); ctx.translate(o.x,o.y); ctx.rotate(o.rot); ctx.globalAlpha=.80; ctx.fillStyle=o.kind==='rock'?'rgba(26,28,24,.85)':o.kind==='tree'?'rgba(34,42,28,.70)':'rgba(22,29,25,.78)'; ctx.strokeStyle='rgba(190,210,190,.16)'; ctx.lineWidth=2; ctx.beginPath(); ctx.roundRect(-o.w/2,-o.h/2,o.w,o.h,Math.min(12,o.h/2)); ctx.fill(); ctx.stroke(); ctx.fillStyle='rgba(255,200,91,.08)'; ctx.fillRect(-o.w/2+8,-o.h/2+8,o.w-16,4); ctx.restore(); }
   function drawPickup(pk){ ctx.save(); ctx.translate(pk.x,pk.y+Math.sin(pk.phase)*3); const col={energia:C.warn,agua:C.cyan,pecas:'#c7c7c7',dados:C.accent,medicina:'#b4ff7b'}[pk.type]||C.accent; ctx.shadowBlur=16; ctx.shadowColor=col; ctx.fillStyle=col; ctx.beginPath(); ctx.roundRect(-8,-8,16,16,5); ctx.fill(); ctx.shadowBlur=0; ctx.restore(); }
   function drawTerminal(t){ ctx.save(); ctx.translate(t.x,t.y); ctx.strokeStyle=t.active?C.accent:'rgba(95,223,255,.45)'; ctx.fillStyle=t.antenna?'rgba(95,223,255,.12)':'rgba(82,255,174,.10)'; ctx.lineWidth=3; ctx.beginPath(); ctx.arc(0,0,t.r,0,TAU); ctx.fill(); ctx.stroke(); if(t.antenna){ ctx.strokeStyle=t.active?C.accent:C.cyan; ctx.beginPath(); ctx.moveTo(0,20); ctx.lineTo(0,-42); ctx.moveTo(0,-26); ctx.lineTo(-23,-4); ctx.moveTo(0,-26); ctx.lineTo(23,-4); ctx.stroke(); } else { ctx.fillStyle=t.active?C.accent:C.cyan; ctx.fillRect(-14,-18,28,36); ctx.fillStyle='#06100c'; ctx.fillRect(-9,-11,18,10); } if(t.progress>0&&!t.active){ ctx.strokeStyle=C.warn; ctx.beginPath(); ctx.arc(0,0,t.r+7,-Math.PI/2,-Math.PI/2+TAU*t.progress); ctx.stroke(); } ctx.restore(); }
-  function drawEnemy(e){ ctx.save(); ctx.translate(e.x,e.y); const col=e.type==='turret'?C.warn:e.type==='crawler'?C.danger:'#ff7b8b'; ctx.rotate(e.ang+game.t*.8); ctx.shadowBlur=e.alert?18:6; ctx.shadowColor=col; ctx.fillStyle='rgba(35,8,12,.9)'; ctx.strokeStyle=col; ctx.lineWidth=2; if(e.type==='drone'){ ctx.beginPath(); ctx.roundRect(-20,-12,40,24,10); ctx.fill(); ctx.stroke(); ctx.fillRect(-32,-4,14,8); ctx.fillRect(18,-4,14,8); } else if(e.type==='crawler'){ ctx.beginPath(); ctx.ellipse(0,0,20,13,0,0,TAU); ctx.fill(); ctx.stroke(); for(let i=-1;i<=1;i+=2){ ctx.beginPath(); ctx.moveTo(-6,i*10); ctx.lineTo(-22,i*20); ctx.moveTo(6,i*10); ctx.lineTo(22,i*20); ctx.stroke(); } } else { ctx.beginPath(); ctx.arc(0,0,22,0,TAU); ctx.fill(); ctx.stroke(); ctx.fillRect(-5,-34,10,30); } ctx.shadowBlur=0; ctx.fillStyle='rgba(0,0,0,.55)'; ctx.fillRect(-23,-32,46,5); ctx.fillStyle=col; ctx.fillRect(-23,-32,46*(e.hp/e.max),5); ctx.restore(); }
-  function drawPlayer(){ const p=game.player; ctx.save(); ctx.translate(p.x,p.y); if(p.inv>0&&Math.floor(game.t*18)%2===0) ctx.globalAlpha=.55; ctx.fillStyle='#0a1610'; ctx.strokeStyle=C.accent; ctx.lineWidth=2.5; ctx.shadowBlur=12; ctx.shadowColor=C.accent; ctx.beginPath(); ctx.roundRect(-15,-20,30,40,11); ctx.fill(); ctx.stroke(); ctx.shadowBlur=0; ctx.fillStyle=C.cyan; ctx.fillRect(-8,-27,16,8); ctx.strokeStyle='rgba(82,255,174,.5)'; ctx.beginPath(); ctx.moveTo(0,-20); ctx.lineTo(0,-42); ctx.stroke(); ctx.restore(); }
-  function drawDrone(){ const d=game.drone; ctx.save(); ctx.translate(d.x,d.y); ctx.shadowBlur=14; ctx.shadowColor=C.cyan; ctx.fillStyle='rgba(95,223,255,.25)'; ctx.strokeStyle=C.cyan; ctx.beginPath(); ctx.arc(0,0,10+Math.sin(game.t*5)*1.5,0,TAU); ctx.fill(); ctx.stroke(); ctx.restore(); }
+  
+function drawEnemy(e){
+  ctx.save(); const col=e.type==='turret'?C.warn:e.type==='crawler'?C.danger:'#ff7b8b'; const a=angleTo(e.x,e.y,game.player.x,game.player.y); let ok=false;
+  if(e.type==='drone') ok=drawSpriteImage(art.drone,e.x,e.y,86,86,a+Math.PI/2,e.alert?1:.92);
+  else if(e.type==='turret') ok=drawSpriteImage(art.turret,e.x,e.y,92,92,a+Math.PI/2,1);
+  else ok=drawSpriteImage(art.raider,e.x,e.y,e.type==='crawler'?80:74,e.type==='crawler'?96:92,a+Math.PI/2,1);
+  if(!ok){ ctx.translate(e.x,e.y); ctx.rotate(e.ang+game.t*.8); ctx.shadowBlur=e.alert?18:6; ctx.shadowColor=col; ctx.fillStyle='rgba(35,8,12,.9)'; ctx.strokeStyle=col; ctx.lineWidth=2; ctx.beginPath(); ctx.arc(0,0,22,0,TAU); ctx.fill(); ctx.stroke(); }
+  ctx.shadowBlur=0; ctx.fillStyle='rgba(0,0,0,.65)'; ctx.fillRect(e.x-24,e.y-48,48,5); ctx.fillStyle=col; ctx.fillRect(e.x-24,e.y-48,48*(e.hp/e.max),5); ctx.restore();
+}
+
+function drawPlayer(){
+  const p=game.player; const target=nearestEnemy(700) || {x:input.targetX??p.x, y:input.targetY??p.y-100}; const a=angleTo(p.x,p.y,input.targetX ?? target.x,input.targetY ?? target.y);
+  if(!drawSpriteImage(art.player,p.x,p.y,82,104,a+Math.PI/2,p.inv>0&&Math.floor(game.t*18)%2===0?.55:1)){ ctx.save(); ctx.translate(p.x,p.y); if(p.inv>0&&Math.floor(game.t*18)%2===0) ctx.globalAlpha=.55; ctx.fillStyle='#0a1610'; ctx.strokeStyle=C.accent; ctx.lineWidth=2.5; ctx.shadowBlur=12; ctx.shadowColor=C.accent; ctx.beginPath(); ctx.roundRect(-15,-20,30,40,11); ctx.fill(); ctx.stroke(); ctx.shadowBlur=0; ctx.fillStyle=C.cyan; ctx.fillRect(-8,-27,16,8); ctx.restore(); }
+  ctx.save(); ctx.globalAlpha=.28; ctx.strokeStyle=C.cyan; ctx.lineWidth=2; ctx.beginPath(); ctx.moveTo(p.x+Math.cos(a)*28,p.y+Math.sin(a)*28); ctx.lineTo(p.x+Math.cos(a)*70,p.y+Math.sin(a)*70); ctx.stroke(); ctx.restore();
+}
+function drawDrone(){ const d=game.drone; ctx.save(); ctx.translate(d.x,d.y); ctx.shadowBlur=14; ctx.shadowColor=C.cyan; ctx.fillStyle='rgba(95,223,255,.25)'; ctx.strokeStyle=C.cyan; ctx.beginPath(); ctx.arc(0,0,10+Math.sin(game.t*5)*1.5,0,TAU); ctx.fill(); ctx.stroke(); ctx.restore(); }
   function drawBullet(b){ ctx.save(); ctx.translate(b.x,b.y); ctx.shadowBlur=16; ctx.shadowColor=b.enemy?C.danger:(b.drone?C.cyan:C.accent); ctx.fillStyle=b.enemy?C.danger:(b.drone?C.cyan:C.accent); ctx.beginPath(); ctx.arc(0,0,b.r,0,TAU); ctx.fill(); ctx.restore(); }
   function drawParticle(pa){ ctx.save(); ctx.globalAlpha=clamp(pa.life/pa.max,0,1); ctx.fillStyle=pa.col; ctx.beginPath(); ctx.arc(pa.x,pa.y,pa.r,0,TAU); ctx.fill(); ctx.restore(); }
   function drawWeather(){ const m=game.mission; ctx.save(); if(m.clima==='chuva'){ ctx.strokeStyle='rgba(130,210,255,.18)'; for(const w of game.weather){ w.y+=w.sp*.016; w.x+=30*.016; if(w.y>H){w.y=-20;w.x=rnd(W);} ctx.beginPath(); ctx.moveTo(w.x,w.y); ctx.lineTo(w.x-5,w.y+w.len); ctx.stroke(); }} else { ctx.fillStyle=m.clima==='neve'?'rgba(230,250,255,.35)':'rgba(255,190,110,.18)'; for(const w of game.weather){ w.y+=w.sp*.004; w.x+=Math.sin(game.t+w.z*9)*.4; if(w.y>H){w.y=-10;w.x=rnd(W);} ctx.beginPath(); ctx.arc(w.x,w.y,1.2+w.z*2,0,TAU); ctx.fill(); }} ctx.restore(); }

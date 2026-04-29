@@ -50,14 +50,14 @@ html, body {
 }
 .menu-card, .base-card, .pause-card {
   position: relative;
-  width: min(1120px, calc(100vw - 24px));
-  max-height: calc(100dvh - 20px);
+  width: min(720px, calc(100vw - 22px));
+  max-height: calc(100dvh - 28px);
   overflow: auto;
   border: 1px solid var(--line);
   border-radius: 26px;
   background: linear-gradient(180deg, rgba(9,28,22,.90), rgba(3,10,8,.93));
   box-shadow: 0 0 90px rgba(82,255,174,.12), inset 0 0 80px rgba(95,223,255,.025);
-  padding: clamp(16px, 2.6vw, 28px);
+  padding: clamp(18px, 5vw, 32px);
   backdrop-filter: blur(14px);
 }
 h1 { margin: 0; font-size: clamp(34px, 11vw, 72px); letter-spacing: -0.08em; line-height: .92; text-transform: uppercase; }
@@ -75,8 +75,6 @@ button.secondary { border-color: rgba(95,223,255,.28); background: linear-gradie
 button.danger { border-color: rgba(255,93,108,.38); background: linear-gradient(180deg, rgba(255,93,108,.13), rgba(255,93,108,.04)); }
 button:active { transform: translateY(1px) scale(.99); }
 .grid2, .grid3, .upgrades { display:grid; grid-template-columns: 1fr; gap: 12px; margin-top: 18px; }
-.base-visual { padding: 10px; overflow: hidden; }
-.base-scene { width: 100%; height: min(38vw, 420px); display: block; border-radius: 18px; background: linear-gradient(180deg, #0b1410, #060a08); }
 .panel, .upgrade {
   border: 1px solid rgba(118,255,190,.18); border-radius: 21px; background: rgba(1,8,6,.42); padding: 15px;
 }
@@ -88,13 +86,13 @@ button:active { transform: translateY(1px) scale(.99); }
 .stat b { display: block; font-size: 22px; color: var(--accent); }
 .stat span { color: var(--muted); font-size: 11px; text-transform: uppercase; letter-spacing: .08em; }
 .hud {
-  position: absolute; left: max(10px, env(safe-area-inset-left)); right: auto; top: max(8px, env(safe-area-inset-top));
-  display: grid; gap: 7px; pointer-events: none; width: min(50vw, 460px);
+  position: absolute;
+  left: max(10px, env(safe-area-inset-left));
+  right: max(10px, env(safe-area-inset-right));
+  top: max(8px, env(safe-area-inset-top));
+  display: grid; gap: 7px; pointer-events: none;
 }
 .hud-panel { border: 1px solid rgba(118,255,190,.19); background: rgba(2,8,6,.60); backdrop-filter: blur(12px); border-radius: 17px; padding: 9px 11px; box-shadow: 0 0 40px rgba(0,0,0,.22); }
-.hud-combat { display:flex; align-items:center; gap:10px; }
-.hud-portrait { flex:0 0 58px; height:58px; border-radius:14px; border:1px solid rgba(118,255,190,.28); background-image:linear-gradient(rgba(0,0,0,.1),rgba(0,0,0,.18)), url('assets/art/operator_portrait.webp'); background-size:cover; background-position:center; box-shadow:inset 0 0 18px rgba(82,255,174,.08), 0 0 20px rgba(0,0,0,.22); }
-.hud-content { flex:1; min-width:0; }
 .hud-top { display:flex; justify-content: space-between; gap: 10px; align-items: center; font-size: 11px; color: var(--muted); text-transform: uppercase; letter-spacing:.08em; }
 .bars { display:grid; gap: 5px; margin-top: 8px; }
 .bar { height: 8px; border-radius: 999px; overflow:hidden; background: rgba(255,255,255,.08); }
@@ -112,17 +110,11 @@ button:active { transform: translateY(1px) scale(.99); }
 .action-btn.big { grid-column: span 2; width:162px; height:56px; border-radius: 19px; }
 .action-btn:active, .action-btn.active { transform: scale(.97); filter: brightness(1.25); }
 @media (min-width: 760px) {
-  .menu-card, .base-card, .pause-card {
-  position: relative;
-  width: min(1120px, calc(100vw - 24px));
-  max-height: calc(100dvh - 20px);
-  overflow: auto;
-  border: 1px solid var(--line);
-  border-radius: 26px;
-  background: linear-gradient(180deg, rgba(9,28,22,.90), rgba(3,10,8,.93));
-  box-shadow: 0 0 90px rgba(82,255,174,.12), inset 0 0 80px rgba(95,223,255,.025);
-  padding: clamp(16px, 2.6vw, 28px);
-  backdrop-filter: blur(14px);
+  .menu-card, .base-card, .pause-card { width: min(820px, calc(100vw - 40px)); }
+  .grid2 { grid-template-columns: repeat(2, minmax(0,1fr)); }
+  .grid3 { grid-template-columns: repeat(3, minmax(0,1fr)); }
+  .upgrades { grid-template-columns: repeat(2, minmax(0,1fr)); }
+  .stats { grid-template-columns: repeat(4, minmax(0,1fr)); }
 }
 @media (max-height: 680px) {
   .joystick { width: 104px; height: 104px; }
@@ -133,13 +125,13 @@ button:active { transform: translateY(1px) scale(.99); }
 }
 
 
-/* 0.1.4 art-overhaul marker */
-@media (orientation: landscape) {
-  .menu-card, .base-card, .pause-card { width: min(1120px, calc(100vw - 24px)); }
-  .base-scene { height: min(36vw, 440px); }
-  .joystick { width: 132px; height: 132px; }
-  .stick { width: 56px; height: 56px; left: 38px; top: 38px; }
-  .action-pad { right: max(18px, env(safe-area-inset-right)); bottom: max(16px, env(safe-area-inset-bottom)); grid-template-columns: 92px 92px; }
-  .action-btn { width: 92px; height: 92px; }
-  .action-btn.big { width: 194px; height: 60px; }
-}
+/* Production art overhaul v0.2.0 */
+.menu-card, .base-card, .pause-card { width: min(1180px, calc(100vw - 24px)); }
+.base-visual { padding: 10px; overflow: hidden; }
+.base-scene { width: 100%; height: min(39vw, 470px); min-height: 260px; display: block; border-radius: 18px; background: linear-gradient(180deg, #0b1410, #060a08); }
+.hud { position: absolute; left: max(10px, env(safe-area-inset-left)); right: auto; top: max(8px, env(safe-area-inset-top)); display: grid; gap: 7px; pointer-events: none; width: min(50vw, 470px); }
+.hud-combat { display: flex; align-items: center; gap: 10px; }
+.hud-portrait { flex: 0 0 58px; height: 58px; border-radius: 14px; border: 1px solid rgba(118,255,190,.30); background-image: radial-gradient(circle at 50% 50%, rgba(82,255,174,.10), rgba(0,0,0,.20)), url('assets/art/player_prod.webp'); background-size: 170%; background-position: 52% 20%; box-shadow: inset 0 0 18px rgba(82,255,174,.08), 0 0 20px rgba(0,0,0,.24); }
+.hud-content { flex: 1; min-width: 0; }
+@media (orientation: landscape) { .menu-card, .base-card, .pause-card { width: min(1180px, calc(100vw - 24px)); } .base-scene { height: min(36vw, 470px); } .joystick { width: 132px; height: 132px; } .stick { width: 56px; height: 56px; left: 38px; top: 38px; } .action-pad { right: max(18px, env(safe-area-inset-right)); bottom: max(16px, env(safe-area-inset-bottom)); grid-template-columns: 92px 92px; } .action-btn { width: 92px; height: 92px; } .action-btn.big { width: 194px; height: 60px; } }
+@media (max-height: 520px) { .base-scene { height: 260px; } .hud { width: min(54vw, 440px); } }
